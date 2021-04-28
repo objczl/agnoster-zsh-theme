@@ -28,8 +28,9 @@ typeset -aHg AGNOSTER_PROMPT_SEGMENTS=(
     prompt_status
     prompt_context
     prompt_virtualenv
-    prompt_dir
+    prompt_git_root
     prompt_git
+    prompt_dir
     prompt_end
 )
 
@@ -114,9 +115,26 @@ prompt_git() {
   fi
 }
 
+prompt_git_root() {
+  local color ref
+  ref="$(basename $(git rev-parse --show-toplevel 2>/dev/null) 2>/dev/null)"
+  if [[ -n "$ref" ]]; then
+    color=blue
+    prompt_segment $color $PRIMARY_FG
+    print -n " $ref"
+  fi
+}
+
 # Dir: current working directory
 prompt_dir() {
-  prompt_segment blue $PRIMARY_FG ' %~ '
+  local git_dir last_dir
+  git_dir="$(basename $(git root 2>/dev/null) 2>/dev/null)"
+  last_dir="$(basename $(realpath .))"
+  if [ -z "$git_dir" ]; then
+    prompt_segment blue $PRIMARY_FG ' %~ '
+  elif [ "$git_dir" != "$last_dir" ]; then
+    prompt_segment blue $PRIMARY_FG " ${$(realpath .)#$(git root)/} "
+  fi
 }
 
 # Status:
